@@ -394,7 +394,7 @@ def write_config_yaml(data: dict[str, str], *, reset_model: bool = False) -> Non
     on top, and write the merged result. Unknown top-level keys (``mcp_servers``,
     custom skill config, etc.) are preserved verbatim.
     """
-    import yaml  # hermes-agent already pulls pyyaml; deferred import keeps cold start light
+    import hermes_yaml as yaml  # upstream YAML compatibility API; deferred import keeps cold start light
 
     model = data.get("LLM_MODEL", "")
     config_path = Path(HERMES_HOME) / "config.yaml"
@@ -664,7 +664,7 @@ def _save_xai_auth_json(tokens: dict) -> None:
 
 def _apply_xai_oauth_config(model: str) -> None:
     """Write config.yaml with provider=xai-oauth and the chosen model."""
-    import yaml
+    import hermes_yaml as yaml
     config_path = Path(HERMES_HOME) / "config.yaml"
     config_path.parent.mkdir(parents=True, exist_ok=True)
     existing: dict = {}

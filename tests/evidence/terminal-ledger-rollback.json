@@ -1,0 +1,37 @@
+{
+  "old_seed": {
+    "python": "3.12.12",
+    "sessions": 3,
+    "messages": 3
+  },
+  "target_migrated_terminal_ledger": {
+    "schema": 32,
+    "admissions": 3,
+    "executions": 3,
+    "receipts": 3,
+    "leases": 0
+  },
+  "old_runtime": {
+    "python": "3.12.12",
+    "read_append_pass": true,
+    "manual_reset_pass": true,
+    "idle_expiry_pass": true,
+    "expiry_finalization_pass": true,
+    "new_session_append_pass": true,
+    "explicit_deletion_blocked": [
+      "delete_session",
+      "delete_sessions",
+      "prune_sessions"
+    ],
+    "blocked_delete_transactions_preserve_messages": true,
+    "all_terminal_ledger_rows_unchanged": true,
+    "integrity": "ok"
+  },
+  "target_reopen": {
+    "python": "3.14.9",
+    "sessions": 6,
+    "messages": 9,
+    "all_terminal_ledger_rows_unchanged": true,
+    "integrity": "ok"
+  }
+}

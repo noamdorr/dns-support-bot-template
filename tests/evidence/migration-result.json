@@ -1,0 +1,24 @@
+{
+  "current_row_rollback_old_read_append_new_reopen": true,
+  "post_rollback_counts": {
+    "sessions": 3,
+    "messages": 4
+  },
+  "old_runtime_test_interpreter": "candidate Python 3.14; actual old SessionDB source",
+  "before_counts": {
+    "sessions": 2,
+    "messages": 2
+  },
+  "after_counts": {
+    "sessions": 2,
+    "messages": 2
+  },
+  "schema_version": 32,
+  "target_resolves_prompt": true,
+  "old_reader_loses_prompt_snapshot": true,
+  "deduplicated_prompt_count": 1,
+  "message_uids_backfilled": true,
+  "integrity_check": "ok",
+  "production_access": false,
+  "coverage": "Synthetic schema-22 migration with inline FTS, two sessions and two messages"
+}

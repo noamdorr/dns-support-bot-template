@@ -1,0 +1,198 @@
+{
+  "checks": [
+    {
+      "suite": "scripts/test_us_issuer_reply.py",
+      "exit": 0,
+      "tests": 9,
+      "output": "[commit_draft] refused: Balancing reason has no selector\n..[commit_draft] refused: Balancing reason has no selector\n.....[commit_draft] refused: Balancing reason has no selector\n..\n----------------------------------------------------------------------\nRan 9 tests in 0.104s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_draft_replies.py",
+      "exit": 0,
+      "tests": 19,
+      "output": "....[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n...............\n----------------------------------------------------------------------\nRan 19 tests in 0.050s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_timeout_recovery.py",
+      "exit": 0,
+      "tests": 9,
+      "output": ".........\n----------------------------------------------------------------------\nRan 9 tests in 0.082s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_ticket_fields.py",
+      "exit": 0,
+      "tests": 8,
+      "output": "........\n----------------------------------------------------------------------\nRan 8 tests in 0.053s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_draft_work_queue.py",
+      "exit": 0,
+      "tests": 26,
+      "output": "........[commit_draft] legacy pending needs verified idle handoff\n.........[commit_draft] committing /tmp/tmpgxps80s8/home/cron/output/job/new.md\n[commit_draft] committing /tmp/tmpgxps80s8/home/cron/output/job/new.md\n........[commit_draft] committing /tmp/tmpwefxu8ep/home/cron/output/job/b.md\n[commit_draft] refused: synthetic refusal\n.\n----------------------------------------------------------------------\nRan 26 tests in 3.936s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_september_feedback.py",
+      "exit": 0,
+      "tests": 23,
+      "output": ".......................\n----------------------------------------------------------------------\nRan 23 tests in 0.265s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_diagnostic_preview.py",
+      "exit": 0,
+      "tests": 17,
+      "output": "....[commit_draft] escalating: case reply requires a saved fact selector and bounded exact quote\n.......[commit_draft] escalating: a cause question cannot be answered by status alone\n.....[commit_draft] escalating: a cause question cannot be answered by status alone\n.\n----------------------------------------------------------------------\nRan 17 tests in 0.108s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_failure_diagnostics.py",
+      "exit": 0,
+      "tests": 12,
+      "output": ".[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n..[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n.[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n.[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n..[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n.[commit_draft] escalating: diagnostic selector lacks matching current-run BO evidence\n...[commit_draft] escalating: diagnostic reply requires a supported observed BO error\n.\n----------------------------------------------------------------------\nRan 12 tests in 0.214s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_draft_parser.py",
+      "exit": 0,
+      "tests": 36,
+      "output": "ok test_a_fabricated_quote_rejects_the_whole_payload_even_with_other_valid_fields\nok test_all_mandatory_fields_present_passes\nok test_an_explicit_geo_solution_currency_wins_over_the_country_fallback\nok test_bare_field_entries_satisfy_the_gate_but_are_not_promoted\nok test_blank_refuse_reason_does_not_trigger_refusal_path\nok test_confidence_at_threshold_passes\nok test_confidence_out_of_range_escalates\nok test_country_fallback_is_subject_to_the_same_evidence_check\nok test_date_range_maps_onto_the_timeframe_field\nok test_empty_output_escalates\nok test_invented_source_quote_escalates_without_echoing_the_value\nok test_knowledge_notes_absent_or_malformed_is_an_empty_list_never_an_escalation\nok test_knowledge_notes_ride_on_the_payload_bounded_and_cleaned\nok test_knowledge_notes_survive_a_refusal\nok test_low_confidence_escalates\nok test_merchant_is_never_promoted\nok test_method_absent_does_not_block_a_draft\nok test_method_rides_in_fields_but_never_reaches_the_create_screen\nok test_missing_confidence_escalates\nok test_missing_mandatory_field_for_category_escalates\nok test_missing_optional_key_parses\nok test_missing_required_key_escalates\nok test_null_priority_yields_no_urgency_quote\nok test_other_requires_description_but_no_universal_fields\nok test_out_of_enum_category_fails_safe\nok test_priority_field_maps_to_urgency_quote\nok test_prose_wrapped_json_parses\nok test_quotes_require_one_exact_source_message_and_cannot_use_model_evidence\nok test_refuse_reason_short_circuits_other_validation\nok test_refuse_reason_wins_even_with_other_fields_present\nok test_retired_category_fails_safe\nok test_spanned_country_fills_the_geo_field_when_nothing_else_does\nok test_spanned_entry_with_blank_value_does_not_satisfy_the_gate\nok test_spanned_field_entries_are_promoted_to_required_fields\nok test_trailing_comma_parses\nok test_unparseable_output_escalates_and_creates_nothing\nall passed\n"
+    },
+    {
+      "suite": "scripts/test_commit_draft.py",
+      "exit": 0,
+      "tests": 36,
+      "output": "ok test_announce_includes_reply_for_review_without_posting_comment\nok test_automatic_message_lock_blocks_writes_without_replay_mode\nok test_commit_announce_mode_returns_would_draft_and_never_calls_jira_create\nok test_commit_created_returns_key_and_posts_draft_comment\nok test_commit_error_section_returns_escalation\nok test_commit_jira_refused_returns_could_not_file_pointer\nok test_commit_real_refusal_that_previously_failed_to_parse_now_commits_cleanly\nok test_commit_refusal_returns_refusal_pointer\nok test_commit_unparseable_output_returns_escalation_and_advances_watermark\nok test_drain_to_jira_payload_preserves_all_six_verified_fields\nok test_extract_turn_response_handles_error_section\nok test_extract_turn_response_ignores_json_braces_embedded_in_the_prompt\nok test_extract_turn_response_returns_only_the_response_section\nok test_extract_turn_response_unrecognized_format_returns_both_none\nok test_forged_quote_never_calls_jira_and_clears_pending_source_text\nok test_knowledge_notes_are_appended_under_a_refusal_too\nok test_knowledge_notes_are_appended_under_the_announce_pointer\nok test_legacy_pending_cannot_verify_quotes_using_the_output_prompt\nok test_main_ignores_stray_silent_tick_docs_with_no_pending_draft\nok test_main_prints_exactly_the_pointer_and_nothing_else\nok test_main_silent_when_nothing_pending_prints_nothing\nok test_many_silent_ticks_in_a_row_report_nothing\nok test_model_cannot_enable_replay_and_normal_write_path_is_unchanged\nok test_new_output_files_no_job_returns_empty\nok test_new_output_files_nothing_new_returns_empty\nok test_new_output_files_picks_oldest_unwatermarked_first\nok test_new_output_files_respects_watermark\nok test_no_knowledge_notes_leaves_the_pointer_untouched\nok test_pending_turn_ignores_previous_empty_and_real_outputs\nok test_real_pending_draft_output_is_still_committed_normally\nok test_replay_never_writes_even_after_mode_and_project_change\nok test_resolve_drafting_job_id_finds_matching_agent_job\nok test_resolve_drafting_job_id_ignores_no_agent_job_with_same_script_name\nok test_silent_tick_doc_is_never_parsed_or_reported\nok test_spanned_fields_reach_jira_create_ticket_as_required_fields\nok test_unspanned_fields_send_no_required_fields\nall passed\n[commit_draft] drafting turn errored: ```\nRuntimeError: boom\n```\n[commit_draft] jira_create_ticket did not create: refused - refusing to write to project 'TF'\n[commit_draft] refused: Missing one or two example transaction IDs required for a Routing / Set-up check incident\n[commit_draft] refused: account creation - secret\n[commit_draft] escalating: Drafting output invalid; no ticket creation attempted\n[commit_draft] refused: bundle of asks\n[commit_draft] escalating: source_quote for 'bin' was not found in saved source messages\n[commit_draft] committing /tmp/commit_draft_test_1jgia1tk/cron/output/job1/20260804_090000.md\n[commit_draft] committing /tmp/commit_draft_test_j5x7aiss/cron/output/job1/20260910_150406.md\n[commit_draft] refused: current refusal\n[commit_draft] committing /tmp/commit_draft_test_uy0tfq6u/cron/output/job1/20260804_090000.md\n"
+    },
+    {
+      "suite": "scripts/test_pending_status.py",
+      "exit": 0,
+      "tests": 16,
+      "output": "[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n.[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires an exact supported BO order status\n[commit_draft] escalating: status reply requires ru/en and one to twenty orders\n[commit_draft] escalating: status reply requires ru/en and one to twenty orders\n..[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n[commit_draft] escalating: status reply must match every order in the saved current request exactly once\n.[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n..[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n[commit_draft] escalating: status reply cannot be combined with ticket or free-text fields\n[commit_draft] escalating: status reply requires closed order, status, source and language selectors\n.[commit_draft] refused: BO evidence unavailable\n[commit_draft] escalating: status reply requires sufficient numeric confidence\n[commit_draft] escalating: status reply requires sufficient numeric confidence\n[commit_draft] escalating: status reply requires sufficient numeric confidence\n[commit_draft] escalating: status reply requires sufficient numeric confidence\n[commit_draft] escalating: status reply requires sufficient numeric confidence\n.[commit_draft] escalating: missing mandatory field(s) for category 'Technical Data & Assistance': country, card_type\n[commit_draft] escalating: source_quote for 'order_id' was not found in saved source messages\n...[commit_draft] escalating: Drafting output invalid; no ticket creation attempted\n[commit_draft] escalating: status reply requires an exact supported BO order status\n.[commit_draft] refused: Status requires manual checking\n[commit_draft] refused: Status requires manual checking\n.[commit_draft] refused: Status requires manual checking\n[commit_draft] escalating: missing mandatory field(s) for category 'Technical Data & Assistance': merchant_or_processor, country, card_type\n...\n----------------------------------------------------------------------\nRan 16 tests in 0.338s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_category_requirements.py",
+      "exit": 0,
+      "tests": 4,
+      "output": "...[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': project_name\n.\n----------------------------------------------------------------------\nRan 4 tests in 0.022s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_daily_support.py",
+      "exit": 0,
+      "tests": 27,
+      "output": "[commit_draft] refused: Already resolved\n.....................[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': project_name\n......\n----------------------------------------------------------------------\nRan 27 tests in 0.082s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_drain_queue.py",
+      "exit": 0,
+      "tests": 15,
+      "output": "ok test_automatic_preview_lock_survives_mode_change_before_dequeue\nok test_dequeue_empty_queue_returns_none\nok test_dequeue_removes_item_from_queue_file\nok test_dequeue_returns_newest_by_enqueued_at\nok test_main_empty_queue_prints_only_wake_false\nIris queue handoff: 1d87d744bb719d79e67734a50fcaa8c54b11eded3729148ac851d04c4c5fd593\nSupport ticket work item ready to draft.\nOperator policy: sandbox_replay=false\nOperator policy: ticket_confirmation=false\nOperator policy: ticket_followup=false\nOperator policy: draft_retry=0\nGroup: sandbox\nTagged by: 100000001\nMessage: 'please check routing'\nPreceding context:\n  [2026-08-04T09:23:14+00:00] 100000001: 'test 1'\n\n\nRaw item JSON:\n{\"message_id\": \"23\", \"chat_id\": \"-1000000000001\", \"group\": \"sandbox\", \"tagger\": \"100000001\", \"text\": \"please check routing\", \"context\": [{\"timestamp\": \"2026-08-04T09:23:14+00:00\", \"sender\": \"100000001\", \"text\": \"test 1\"}], \"enqueued_at\": \"2026-08-04T09:23:28+00:00\", \"_work\": {\"action\": \"staff_tag\", \"identity\": null, \"request_id\": \"7eb50a4bde60b2c387cabb977b5d340dc157066cbedaaea3b60c6bf64e2c299f\"}}\n{\"wakeAgent\": true}\nok test_main_pending_draft_carries_the_drafting_job_id\nok test_main_with_queue_item_prints_item_and_wakes_and_writes_pending\nok test_message_cannot_enable_replay_and_invalid_config_fails_closed\nok test_pending_snapshots_completed_output_floor_before_waking\nok test_replay_latch_and_header_are_derived_together\nok test_replay_requires_operator_group_announce_and_ais\nok test_resolve_own_job_id_finds_matching_agent_job\nok test_resolve_own_job_id_ignores_no_agent_job_with_same_script_name\nok test_resolve_own_job_id_missing_jobs_file_returns_none\nok test_saved_evidence_excludes_prompt_metadata_and_model_flags\nall passed\n"
+    },
+    {
+      "suite": "scripts/test_case_feedback.py",
+      "exit": 0,
+      "tests": 17,
+      "output": ".................\n----------------------------------------------------------------------\nRan 17 tests in 0.274s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_check_draft_prompt.py",
+      "exit": 0,
+      "tests": 7,
+      "output": "ok test_absent_job_is_drift_not_a_crash\nok test_both_failures_combine_in_the_exit_code\nok test_cli_exit_code_and_report\nok test_drift_when_a_kb_file_changes_after_the_push\nok test_match_when_deployed_equals_fresh_build\nok test_missing_chat_side_file_is_reported_even_when_prompt_matches\nok test_no_chat_kb_dir_skips_the_missing_check\nall passed\n"
+    },
+    {
+      "suite": "scripts/test_support_drafting.py",
+      "exit": 0,
+      "tests": 22,
+      "output": "....[commit_draft] escalating: source_quote for 'bin' was not found in saved source messages\n...[commit_draft] escalating: source footers belong outside Jira text\n[commit_draft] escalating: source footers belong outside Jira text\n[commit_draft] escalating: source footers belong outside Jira text\n.[commit_draft] jira_create_ticket did not create: refused - write gate\n.[commit_draft] refused: Human review needed\n.[commit_draft] escalating: confidence 0.1 below threshold 0.5\n[commit_draft] escalating: missing mandatory field(s) for category 'Technical Data & Assistance': merchant_or_processor, country, card_type\n...[commit_draft] escalating: support_answer must contain source selectors, not composed copy\n.......[commit_draft] refused: Image-only or PII evidence requires a human\n..\n----------------------------------------------------------------------\nRan 22 tests in 0.242s\n\nOK\n"
+    },
+    {
+      "suite": "scripts/test_saved_reply.py",
+      "exit": 0,
+      "tests": 12,
+      "output": "............\n----------------------------------------------------------------------\nRan 12 tests in 0.225s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/wiki/test_support_answer.py",
+      "exit": 0,
+      "tests": 28,
+      "output": "............................\n----------------------------------------------------------------------\nRan 28 tests in 0.033s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/wiki/test_wiki.py",
+      "exit": 0,
+      "tests": 21,
+      "output": "ok test_read_bounded_slice_returns_requested_lines\nok test_read_explicit_range_on_large_file_not_flagged_truncated\nok test_read_invalid_line_range_rejected\nok test_read_large_file_truncated_by_default\nok test_read_meta_missing_returns_none\nok test_read_meta_present_returns_parsed_json\nok test_read_missing_file_returns_exists_false\nok test_read_rejects_absolute_path_outside_root\nok test_read_rejects_symlink_escape_file\nok test_read_rejects_traversal_attempt\nok test_read_whole_small_file\nok test_search_empty_query_refused\nok test_search_falls_back_to_raw_when_no_curated_match\nok test_search_finds_known_term\nok test_search_no_match_returns_empty\nok test_search_prefers_curated_over_raw\nok test_search_skips_symlinked_directory_escape\nok test_wiki_read_handler_rejects_traversal\nok test_wiki_read_handler_returns_file_with_freshness\nok test_wiki_search_handler_attaches_freshness_and_prefers_curated\nok test_wiki_search_handler_no_clone_returns_error\nall passed\n"
+    },
+    {
+      "suite": "plugins/triage/test_pilot_case_logging.py",
+      "exit": 0,
+      "tests": 12,
+      "output": "[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n..[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] refused: No supported diagnostic selector\n.[commit_draft] drafting turn errored: Synthetic runtime failure\n.[commit_draft] refused: No supported diagnostic selector\n[commit_draft] refused: No supported diagnostic selector\n.\n----------------------------------------------------------------------\nRan 12 tests in 0.315s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_case_logging.py",
+      "exit": 0,
+      "tests": 18,
+      "output": "..................\n----------------------------------------------------------------------\nRan 18 tests in 0.076s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_triage.py",
+      "exit": 0,
+      "tests": 51,
+      "output": "ok test_allowlisted_group_observed_and_skipped\nok test_allowlisted_group_records_chat_title_in_ledger\nok test_answered_forum_topic_queue_item_carries_the_thread_id\nok test_auto_pilot_ignores_unknown_senders_and_blank_messages\nok test_auto_pilot_requires_safe_config_and_announce_mode\nok test_channel_event_is_untouched\nok test_context_window_caps_at_20_messages\nok test_context_window_excludes_messages_older_than_30_minutes\nok test_corrupt_sidecar_recovers_without_breaking_the_skip\nok test_discovery_accumulates_every_topic_seen_in_one_chat\nok test_discovery_does_not_rewrite_on_every_message\nok test_discovery_preserves_first_seen_and_follows_a_rename\nok test_dm_event_is_not_discovered\nok test_dm_event_is_untouched\nok test_duplicate_message_id_enqueues_once\nok test_exception_inside_hook_still_skips\nok test_exception_inside_the_answer_branch_stays_silent\nok test_exception_reading_source_still_skips\nok test_forum_chat_type_is_skipped_observed_and_discovered\nok test_forum_topic_tag_from_team_member_enqueues_exactly_one\nok test_group_answer_mode_is_hot_read_and_unknown_values_fail_closed\nok test_group_cannot_override_the_global_silence_switch\nok test_group_chat_type_with_thread_id_is_recorded\nok test_internal_event_is_untouched\nok test_internal_group_answers_while_mock_client_group_stays_silent\nok test_message_does_not_mention_bot\nok test_message_mentions_bot_returns_false_without_identity\nok test_message_mentions_bot_via_mention_entity\nok test_message_mentions_bot_via_text_mention_entity\nok test_missing_chat_name_degrades_to_null_and_still_skips\nok test_missing_group_mode_and_legacy_entries_stay_silent_with_global_mode_on\nok test_mode_is_reread_per_event_so_the_switch_needs_no_restart\nok test_mode_reader_normalizes_and_fails_closed\nok test_non_allowlisted_group_ignored_entirely\nok test_non_allowlisted_group_is_discovered_but_never_observed\nok test_observe_only_group_queues_tags_without_answering_in_any_group_type\nok test_outbound_allowed_for_home_channel_and_operators\nok test_plain_group_queue_item_has_a_null_thread_id\nok test_plain_group_without_a_topic_records_no_thread_id\nok test_plain_message_cannot_opt_in_an_ordinary_group\nok test_plain_pilot_message_queues_once_and_stays_silent\nok test_removing_group_opt_in_stops_answers_without_losing_observations_or_queue\nok test_supergroup_chat_type_is_skipped\nok test_tag_detection_failure_keeps_ledger_with_unknown_classification\nok test_tag_from_team_member_enqueues_one\nok test_tag_from_unknown_sender_enqueues_none\nok test_tagged_by_a_non_team_member_stays_silent\nok test_tagged_in_a_group_that_is_not_allowlisted_stays_silent\nok test_tagged_team_member_in_allowlisted_group_is_answered\nok test_untagged_message_in_an_allowlisted_group_stays_silent\nok test_without_the_mode_file_a_tag_is_queued_but_not_answered\nall passed\n[triage] failed to read /tmp/triage_test_l0wlhlek/discovered_chats.json: JSONDecodeError\n[triage] group handling failed: RuntimeError\n[triage] group handling failed: RuntimeError\n[triage] hook failed, skipping: RuntimeError\n[triage] ANSWER_MODE holds an unrecognized value 'live', staying silent\n[triage] ANSWER_MODE holds an unrecognized value '', staying silent\n"
+    },
+    {
+      "suite": "plugins/triage/test_draft_requests.py",
+      "exit": 0,
+      "tests": 14,
+      "output": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.087s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_reply_feedback.py",
+      "exit": 0,
+      "tests": 6,
+      "output": "......\n----------------------------------------------------------------------\nRan 6 tests in 0.018s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_ticket_offers.py",
+      "exit": 0,
+      "tests": 28,
+      "output": "............................\n----------------------------------------------------------------------\nRan 28 tests in 0.236s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_ticket_information.py",
+      "exit": 0,
+      "tests": 43,
+      "output": "[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n[commit_draft] escalating: saved case field conflict: project_name\n.[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n...[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n.[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n[commit_draft] escalating: Drafting output invalid; no ticket creation attempted\n...........[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n....[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n..........[commit_draft] escalating: missing mandatory field(s) for category 'Routing / Set-up check': traffic_type\n.............\n----------------------------------------------------------------------\nRan 43 tests in 0.473s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_manual_followup.py",
+      "exit": 0,
+      "tests": 61,
+      "output": ".............................................................\n----------------------------------------------------------------------\nRan 61 tests in 0.345s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/triage/test_failure_context.py",
+      "exit": 0,
+      "tests": 4,
+      "output": "[commit_draft] escalating: Drafting tools unavailable; no ticket creation attempted\n.[commit_draft] escalating: Drafting tools unavailable; no ticket creation attempted\n.[commit_draft] escalating: Drafting tools unavailable; no ticket creation attempted\n.[commit_draft] escalating: Drafting tools unavailable; no ticket creation attempted\n.\n----------------------------------------------------------------------\nRan 4 tests in 0.065s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/jira/test_jira.py",
+      "exit": 0,
+      "tests": 61,
+      "output": "ok test_all_seven_live_categories_accepted\nok test_all_six_supplied_at_once_round_trips\nok test_allowlist_accepts_ais_by_default\nok test_announce_mode_creates_nothing_and_returns_payload\nok test_bare_bin_argument_refused\nok test_bare_order_id_argument_refused\nok test_bare_project_name_argument_refused\nok test_bin_shape_typo_refused\nok test_bin_whose_value_is_absent_from_its_own_span_refused\nok test_bin_with_empty_source_span_refused\nok test_bin_with_source_span_populates_the_field\nok test_bin_without_source_span_refused\nok test_blank_value_is_treated_as_unsupplied_not_as_an_empty_write\nok test_cascade_does_not_false_positive_on_cyrillic_kaskad\nok test_comment_announce_mode_creates_nothing\nok test_comment_house_style_violation_refused\nok test_comment_live_mode_posts\nok test_created_payload_has_category_assignee_empty_priority_medium_required_dash\nok test_em_dash_in_a_supplied_value_refused\nok test_field_key_case_is_normalized\nok test_free_text_fields_need_a_span_but_not_verbatim_containment\nok test_house_style_clean_text_has_no_violations\nok test_house_style_each_violation_refused_individually\nok test_house_style_violations_allow_signoff_flag_drops_only_signoff\nok test_jira_search_missing_mirror_returns_error_not_crash\nok test_jira_search_requires_query_or_fingerprint\nok test_jira_search_returns_matches_by_query\nok test_jira_search_scrubs_comment_bodies\nok test_live_mode_creates\nok test_never_set_fields_absent_from_payload\nok test_non_object_required_fields_refused_not_crashed\nok test_order_id_and_project_name_also_require_the_value_inside_the_span\nok test_other_retired_category_refused\nok test_partially_supplied_leaves_the_rest_dashed\nok test_priority_bumps_to_high_on_urgency_quote_never_highest\nok test_priority_defaults_to_medium\nok test_project_name_files_the_spans_spelling_not_the_models\nok test_required_field_ids_cover_every_logical_key\nok test_retired_category_refused\nok test_retired_category_still_fails_ahead_of_any_field_population\nok test_returned_comment_is_scrubbed\nok test_sandbox_projection_keeps_source_and_closed_category_refusals\nok test_sandbox_projection_preserves_every_validated_field_without_mutating_input\nok test_scrubber_leaves_clean_text_alone\nok test_scrubber_removes_bare_long_token\nok test_scrubber_removes_labeled_credential\nok test_sepa_as_a_solution_value_is_allowed\nok test_signoff_in_description_allowed\nok test_signoff_in_summary_refused\nok test_summary_terminal_punctuation_refused\nok test_summary_word_count_enforced\nok test_tf_refused_even_when_environment_allowlists_it\nok test_tf_target_refused_before_any_http_call\nok test_tf_target_refused_even_in_live_mode\nok test_tf_target_refused_for_comment_too\nok test_unknown_category_refused\nok test_unknown_required_field_key_refused\nok test_unreadable_mode_file_blocks_garbage_value\nok test_unreadable_mode_file_blocks_missing\nok test_unsupplied_required_fields_still_dash\nok test_veto_mode_waits_the_configured_window_then_creates\nall passed\n"
+    },
+    {
+      "suite": "plugins/jira/test_sandbox.py",
+      "exit": 0,
+      "tests": 53,
+      "output": ".....................................................\n----------------------------------------------------------------------\nRan 53 tests in 0.072s\n\nOK\n"
+    },
+    {
+      "suite": "plugins/jira/test_sandbox_edit.py",
+      "exit": 0,
+      "tests": 14,
+      "output": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.029s\n\nOK\n"
+    }
+  ],
+  "tests": 729,
+  "failed": []
+}

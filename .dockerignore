@@ -1,0 +1,6 @@
+.git
+tests
+UPGRADE-REVIEW.md
+.env
+*.log
+__pycache__

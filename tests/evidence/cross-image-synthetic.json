@@ -1,0 +1,144 @@
+{
+  "baseline": {
+    "schema_version": 22,
+    "counts": {
+      "sessions": 2,
+      "messages": 2
+    },
+    "integrity": "ok"
+  },
+  "migration": {
+    "schema_version": 32,
+    "counts": {
+      "sessions": 2,
+      "messages": 2
+    },
+    "integrity": "ok",
+    "original_sessions_messages_all_original_fields_preserved": true,
+    "added_schema_objects": [
+      "conversation_generations",
+      "gateway_heartbeats",
+      "gateway_hygiene_state",
+      "idx_messages_assistant_calls_by_session",
+      "idx_messages_display_backfill",
+      "idx_messages_display_identity",
+      "idx_messages_display_page",
+      "idx_messages_platform_msg_id",
+      "idx_messages_session_id",
+      "idx_messages_session_uid",
+      "idx_session_admissions_cron_request",
+      "idx_session_turn_leases_expires",
+      "idx_sessions_effective_activity",
+      "idx_sessions_local_created_started",
+      "idx_sessions_system_prompt_hash",
+      "idx_sessions_title_unique",
+      "idx_sessions_tool_names",
+      "idx_worker_executions_session_status",
+      "messages_display_identity_delete",
+      "messages_display_identity_update",
+      "messages_display_order_insert",
+      "messages_display_visibility_update",
+      "messages_message_uid_insert",
+      "messages_transcript_revision_update",
+      "runtime_epoch",
+      "session_admissions",
+      "session_admissions_pending",
+      "session_turn_leases",
+      "sessions_runtime_ledger_delete_guard",
+      "system_prompts",
+      "worker_executions",
+      "worker_receipts"
+    ],
+    "changed_schema_objects": [
+      "async_delegations",
+      "messages",
+      "messages_fts_trigram_update",
+      "messages_fts_update",
+      "sessions"
+    ],
+    "removed_schema_objects": [],
+    "added_columns": {
+      "sessions": [
+        "auto_archived",
+        "compression_ineffective_count",
+        "compression_overload_streak",
+        "compression_recovery_deadline",
+        "created_source",
+        "git_metadata_generation",
+        "hidden",
+        "last_activity_at",
+        "last_activity_description",
+        "last_activity_provenance",
+        "last_read_at",
+        "pinned",
+        "runtime_generation",
+        "runtime_revision",
+        "system_prompt_hash",
+        "title_source",
+        "tool_names",
+        "transcript_revision",
+        "transport_profile"
+      ],
+      "messages": [
+        "_compressed_summary",
+        "absorbed_message_uids",
+        "display_identity",
+        "display_kind",
+        "display_metadata",
+        "display_order",
+        "message_uid",
+        "tool_call_uid",
+        "tool_call_uids"
+      ],
+      "async_delegations": [
+        "origin_session_id",
+        "owner_execution_id"
+      ]
+    },
+    "changed_original_columns": {
+      "sessions": {
+        "system_prompt": 2
+      }
+    },
+    "original_table_rows_unchanged": [
+      "messages",
+      "session_model_usage",
+      "gateway_routing",
+      "compression_locks",
+      "async_delegations"
+    ],
+    "null_message_uids": 0,
+    "prompt_references": 2
+  },
+  "current_row_restore": {
+    "all_original_fields_preserved": true,
+    "counts": {
+      "sessions": 3,
+      "messages": 3
+    },
+    "new_target_rows_preserved": true,
+    "all_prompt_refs_expanded": true
+  },
+  "legacy_runtime": {
+    "python": "3.12.12",
+    "schema_implementation": 22,
+    "all_original_prompt_reads_pass": true,
+    "append_prompt_update_new_session_pass": true,
+    "all_original_fields_preserved": true,
+    "counts": {
+      "sessions": 4,
+      "messages": 5
+    },
+    "integrity": "ok"
+  },
+  "target_reopen": {
+    "python": "3.14.9",
+    "all_original_fields_preserved": true,
+    "old_updated_prompt_visible": true,
+    "counts": {
+      "sessions": 4,
+      "messages": 5
+    },
+    "integrity": "ok"
+  }
+}
