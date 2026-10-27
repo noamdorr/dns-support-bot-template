@@ -12,6 +12,8 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
     os.environ['HERMES_HOME'] = temporary
     os.environ['ADMIN_PASSWORD'] = 'synthetic-offline-test-only'
     os.environ['ADMIN_USERNAME'] = 'synthetic-test'
+    os.environ['HERMES_DASHBOARD_PUBLIC_URL'] = 'https://synthetic.example.invalid'
+    os.environ['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD'] = 'synthetic-inherited-override'
     module = runpy.run_path('/app/server.py', run_name='wrapper_contract_check')
     import hermes_yaml as yaml
     config = {
@@ -83,6 +85,12 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
             for call in (gateway_call, dashboard_call):
                 assert call.kwargs['env']['HERMES_HOME'] == temporary
                 assert call.kwargs['env']['HERMES_ALLOW_ROOT_GATEWAY'] == '1'
+            from plugins.dashboard_auth.basic import _verify_password
+            dashboard_env = dashboard_call.kwargs['env']
+            assert dashboard_env['HERMES_DASHBOARD_BASIC_AUTH_USERNAME'] == 'synthetic-test'
+            assert _verify_password('synthetic-offline-test-only', dashboard_env['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH'])
+            assert 'HERMES_DASHBOARD_BASIC_AUTH_PASSWORD' not in dashboard_env
+            assert dashboard_env['HERMES_DASHBOARD_PUBLIC_URL'] == 'https://synthetic.example.invalid'
             await gateway.start()
             await dashboard.start()
             assert spawn.await_count == 2
@@ -90,6 +98,34 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
         for key, value in config.items():
             assert after_start[key] == value, key
         assert after_start['data_dir'] == temporary
+
+        # Exercise the actual WS proxy boundary with inert pumps: only backend
+        # session cookies cross the hop, while query/subprotocol tickets survive.
+        connection = SimpleNamespace(subprotocol='hermes-gateway-v1', close=AsyncMock())
+        socket = SimpleNamespace(
+            cookies={'hermes_auth': module['_make_auth_token'](),
+                     'hermes_session_at': 'synthetic-access',
+                     '__Host-hermes_session_provider': 'basic', 'unrelated': 'private'},
+            url=SimpleNamespace(path='/api/events', query='ticket=synthetic-ticket'),
+            scope={'subprotocols': ['hermes-gateway-v1', 'hermes-gateway-ticket.synthetic-ticket']},
+            headers={'origin': 'https://synthetic.example.invalid'},
+            accept=AsyncMock(), close=AsyncMock(), client_state=None,
+        )
+        connect = AsyncMock(return_value=connection)
+        namespace = module['ws_proxy'].__globals__
+        with patch.object(module['websockets'], 'connect', connect), patch.dict(namespace, {
+            '_ws_pump_client_to_upstream': AsyncMock(), '_ws_pump_upstream_to_client': AsyncMock(),
+        }):
+            await module['ws_proxy'](socket)
+        call = connect.await_args
+        assert call.args[0].endswith('/api/events?ticket=synthetic-ticket')
+        forwarded = call.kwargs['additional_headers']['Cookie']
+        assert 'hermes_session_at=synthetic-access' in forwarded
+        assert '__Host-hermes_session_provider=basic' in forwarded
+        assert 'hermes_auth' not in forwarded and 'unrelated' not in forwarded
+        assert call.kwargs['subprotocols'] == socket.scope['subprotocols']
+        assert call.kwargs['origin'] == 'https://synthetic.example.invalid'
+        socket.accept.assert_awaited_once_with(subprotocol='hermes-gateway-v1')
 
     asyncio.run(check_startup_hold())
     print(json.dumps({'config_preserved': True, 'wrapper_imports': True,

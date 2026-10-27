@@ -40,6 +40,7 @@ import time
 import zipfile
 from collections import deque
 from contextlib import asynccontextmanager
+from http.cookies import SimpleCookie
 from pathlib import Path
 
 import httpx
@@ -893,6 +894,11 @@ from urllib.parse import quote as _url_quote, urlparse as _urlparse
 COOKIE_NAME = "hermes_auth"
 COOKIE_MAX_AGE = 7 * 86400  # 7 days
 COOKIE_SECRET = secrets.token_bytes(32)
+DASHBOARD_SESSION_COOKIES = tuple(
+    prefix + name
+    for prefix in ("", "__Host-", "__Secure-")
+    for name in ("hermes_session_at", "hermes_session_rt", "hermes_session_provider")
+)
 
 # Public paths — no auth required. Everything else is behind the cookie gate.
 PUBLIC_PATHS = {"/health", "/login", "/logout"}
@@ -1006,10 +1012,12 @@ def _html_escape(s: str) -> str:
 
 async def page_login(request: Request) -> Response:
     """GET /login — render the sign-in form."""
-    # Already signed in? Bounce to returnTo (or /).
+    # Upstream also redirects to /login, using next=. An existing outer cookie
+    # must establish the backend session before returning or it loops forever.
+    rt = _safe_return_to(request.query_params.get("returnTo", request.query_params.get("next", "/")))
     if _is_authenticated(request):
-        return RedirectResponse(_safe_return_to(request.query_params.get("returnTo", "/")), status_code=302)
-    rt = _safe_return_to(request.query_params.get("returnTo", "/"))
+        response = RedirectResponse(rt, status_code=302)
+        return await _bridge_dashboard_login(request, response, required=not rt.startswith("/setup"))
     error_html = ('<div class="err">Invalid username or password</div>'
                   if request.query_params.get("error") else "")
     html = (LOGIN_PAGE_HTML
@@ -1037,7 +1045,7 @@ async def login_post(request: Request) -> Response:
             samesite="lax",
             path="/",
         )
-        return resp
+        return await _bridge_dashboard_login(request, resp, required=False)
     return RedirectResponse(f"/login?returnTo={_url_quote(return_to)}&error=1", status_code=302)
 
 
@@ -1045,7 +1053,38 @@ async def logout(request: Request) -> Response:
     """GET /logout — clear cookie and bounce to login."""
     resp = RedirectResponse("/login", status_code=302)
     resp.delete_cookie(COOKIE_NAME, path="/")
+    for name in DASHBOARD_SESSION_COOKIES:
+        resp.delete_cookie(name, path="/", secure=name.startswith("__"), httponly=True)
     return resp
+
+
+async def _bridge_dashboard_login(request: Request, response: Response, *, required: bool) -> Response:
+    """Use the same authenticated admin identity with upstream's password provider.
+
+    A private client avoids sharing authentication cookies between proxy requests.
+    Setup stays accessible while the dashboard is held or unavailable.
+    """
+    if STARTUP_HOLD.exists():
+        return response
+    try:
+        scheme = request.headers.get("x-forwarded-proto", request.url.scheme).split(",", 1)[0].strip()
+        async with httpx.AsyncClient(timeout=5, trust_env=False, follow_redirects=False) as client:
+            upstream = await client.post(
+                f"{HERMES_DASHBOARD_URL}/auth/password-login",
+                headers={"x-forwarded-proto": "https" if scheme == "https" else "http"},
+                json={"provider": "basic", "username": ADMIN_USERNAME,
+                      "password": ADMIN_PASSWORD, "next": "/"},
+            )
+        upstream.raise_for_status()
+        if upstream.json().get("ok") is not True:
+            raise ValueError("Dashboard login did not succeed")
+        for cookie in upstream.headers.get_list("set-cookie"):
+            response.raw_headers.append((b"set-cookie", cookie.encode("latin-1")))
+    except (httpx.HTTPError, ValueError):
+        print("[auth] Dashboard login unavailable; outer admin authentication remains required.", flush=True)
+        if required:
+            return HTMLResponse(DASHBOARD_UNAVAILABLE_HTML, status_code=503)
+    return response
 
 
 # ── Gateway manager ───────────────────────────────────────────────────────────
@@ -1274,6 +1313,15 @@ class Dashboard:
             print(message, flush=True)
             return
         try:
+            # Supported upstream provider, using the existing wrapper identity.
+            # Hash in memory and pass only to this child; never rewrite config or
+            # persist a second password. An inherited plaintext override must not
+            # supersede this identity (upstream gives it precedence over hashes).
+            from plugins.dashboard_auth.basic import hash_password
+            env = build_hermes_env()
+            env["HERMES_DASHBOARD_BASIC_AUTH_USERNAME"] = ADMIN_USERNAME
+            env["HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH"] = hash_password(ADMIN_PASSWORD)
+            env.pop("HERMES_DASHBOARD_BASIC_AUTH_PASSWORD", None)
             self.proc = await asyncio.create_subprocess_exec(
                 "hermes", "dashboard",
                 "--host", HERMES_DASHBOARD_HOST,
@@ -1293,7 +1341,7 @@ class Dashboard:
                 # so the PTY child spawns instantly on first chat connect.
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
-                env=build_hermes_env(),
+                env=env,
             )
             print(f"[dashboard] spawned pid={self.proc.pid} → {HERMES_DASHBOARD_URL}", flush=True)
             self._drain_task = asyncio.create_task(self._drain())
@@ -2055,8 +2103,8 @@ It may still be starting up, or it may have crashed.</p>
 async def _proxy_to_dashboard(request: Request) -> Response:
     """Forward an authenticated request to the Hermes dashboard subprocess.
 
-    Assumes edge auth (basic auth middleware) has already validated the caller.
-    HTTP-only: the native Hermes dashboard does not use WebSockets.
+    Assumes the outer cookie guard has already validated the caller.
+    WebSockets use the separate ws_proxy entrypoint.
     """
     client = get_http_client()
     target = f"{HERMES_DASHBOARD_URL}{request.url.path}"
@@ -2067,6 +2115,9 @@ async def _proxy_to_dashboard(request: Request) -> Response:
         k: v for k, v in request.headers.items()
         if k.lower() not in HOP_BY_HOP
     }
+    # Always supply the caller's cookie header, even when empty, so the shared
+    # httpx connection pool cannot substitute cookies retained from another call.
+    req_headers["cookie"] = request.headers.get("cookie", "")
     body = await request.body()
 
     try:
@@ -2096,7 +2147,7 @@ async def _proxy_to_dashboard(request: Request) -> Response:
     resp_headers = {
         k: v for k, v in upstream.headers.items()
         if k.lower() not in HOP_BY_HOP
-        and k.lower() not in ("content-encoding", "content-length")
+        and k.lower() not in ("content-encoding", "content-length", "set-cookie")
     }
 
     content = upstream.content
@@ -2116,11 +2167,14 @@ async def _proxy_to_dashboard(request: Request) -> Response:
         except Exception:
             pass  # on any error, fall back to raw upstream content
 
-    return Response(
+    response = Response(
         content=content,
         status_code=upstream.status_code,
         headers=resp_headers,
     )
+    for cookie in upstream.headers.get_list("set-cookie"):
+        response.raw_headers.append((b"set-cookie", cookie.encode("latin-1")))
+    return response
 
 
 async def route_root(request: Request) -> Response:
@@ -2225,9 +2279,9 @@ async def lifespan(app):
 # Auth model (matches the HTTP proxy):
 #   * Edge: our HMAC cookie via _is_authenticated. WebSocket inherits .cookies
 #     from starlette HTTPConnection so the same helper works unchanged.
-#   * Upstream: hermes's own ?token=<_SESSION_TOKEN> query param. The SPA
-#     fetches that token via /api/auth/session-token and includes it in the
-#     WS URL, so we just forward path + query verbatim.
+#   * Upstream: preserve single-use ?ticket= (or legacy ?token=) and supported
+#     subprotocol tickets. Forward only backend session cookies, never our outer
+#     auth cookie or arbitrary client credentials. Upstream still validates them.
 PROXIED_WS_PATHS = ("/api/pty", "/api/ws", "/api/events", "/api/console", "/api/plugins/*")
 
 
@@ -2254,7 +2308,7 @@ async def _ws_pump_client_to_upstream(
     except (WebSocketDisconnect, websockets.exceptions.ConnectionClosed):
         return
     except Exception as e:
-        print(f"[ws-proxy] client→upstream error on {client.url.path}: {e!r}", flush=True)
+        print(f"[ws-proxy] client→upstream error on {client.url.path}: {type(e).__name__}", flush=True)
         return
 
 
@@ -2272,7 +2326,7 @@ async def _ws_pump_upstream_to_client(
     except (websockets.exceptions.ConnectionClosed, WebSocketDisconnect):
         return
     except Exception as e:
-        print(f"[ws-proxy] upstream→client error on {client.url.path}: {e!r}", flush=True)
+        print(f"[ws-proxy] upstream→client error on {client.url.path}: {type(e).__name__}", flush=True)
         return
 
 
@@ -2305,11 +2359,19 @@ async def ws_proxy(websocket: WebSocket) -> None:
     upstream_url = f"ws://{HERMES_DASHBOARD_HOST}:{HERMES_DASHBOARD_PORT}{path}"
     if qs:
         upstream_url = f"{upstream_url}?{qs}"
+    cookies = SimpleCookie()
+    for name in DASHBOARD_SESSION_COOKIES:
+        if name in websocket.cookies:
+            cookies[name] = websocket.cookies[name]
+    cookie_header = "; ".join(morsel.OutputString() for morsel in cookies.values())
 
     try:
         upstream = await websockets.connect(
             upstream_url,
             open_timeout=5,
+            additional_headers={"Cookie": cookie_header} if cookie_header else None,
+            subprotocols=websocket.scope.get("subprotocols") or None,
+            origin=websocket.headers.get("origin"),
             # No keepalive on the loopback hop. hermes v2026.7.20 disabled its
             # own side for a loopback bind (uvicorn ws_ping_interval/timeout
             # went 30s/60s -> None/None) because a GIL-bound agent turn can
@@ -2322,20 +2384,17 @@ async def ws_proxy(websocket: WebSocket) -> None:
             # pumps), and the browser-facing hop keeps uvicorn's own ping.
             ping_interval=None,
             ping_timeout=None,
-            # Don't forward client cookies/headers — hermes WS auth is
-            # purely token-based via the URL, and forwarding random
-            # headers risks future upstream surprises.
         )
     except (asyncio.TimeoutError, OSError, websockets.exceptions.WebSocketException) as e:
         # Hermes dashboard down, restarting, or rejected the upgrade
         # (e.g. bad/missing session token).
-        print(f"[ws-proxy] upstream connect failed for {path}: {e!r}", flush=True)
+        print(f"[ws-proxy] upstream connect failed for {path}: {type(e).__name__}", flush=True)
         # 1011 = internal error; client SPA will surface a generic close.
         await websocket.close(code=1011)
         return
 
     # 3. Both sides ready — accept and start pumping.
-    await websocket.accept()
+    await websocket.accept(subprotocol=upstream.subprotocol)
 
     pump_in = asyncio.create_task(_ws_pump_client_to_upstream(websocket, upstream))
     pump_out = asyncio.create_task(_ws_pump_upstream_to_client(upstream, websocket))

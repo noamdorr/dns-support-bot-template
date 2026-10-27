@@ -5,7 +5,7 @@ transport safety and protected-state checks remain required.
 
 ## Immutable inputs
 
-- Wrapper baseline: `0337856`, with only the Dockerfile and two YAML imports adapted.
+- Wrapper baseline: `0337856`; runtime and wrapper adaptations are described below.
 - Old core: tag `v2026.7.20`, commit `3ef6bbd201263d354fd83ec55b3c306ded2eb72a`, CLI 0.19.0.
 - Target: stable tag `v0.22.5`, commit `bf0203a794a07aac3ff764972ab9087baa4e4f4e`.
 - Published image index: `sha256:9c5561579f3ffdf333401797094ac3a743738d6c25d40f4331c7bf77b694238d`.
@@ -28,6 +28,29 @@ wrapper's old config-seed path. No model, group, roster, job or prompt is embedd
 The two wrapper `yaml` imports use upstream's `hermes_yaml` compatibility API.
 Semantic configuration preservation passed. Serialized YAML whitespace can change,
 so byte hashes alone cannot assess preserved configuration after startup.
+
+The wrapper also supports persistent `$HERMES_HOME/.startup-hold` checks at both
+gateway and dashboard launch entrypoints, before child-process side effects. The
+image explicitly sets upstream's supported `HERMES_ALLOW_ROOT_GATEWAY=1` because
+the existing wrapper and volume already use root; no user or ownership is changed.
+
+The upstream public-URL dashboard gate remains enabled. The dashboard child receives
+the existing wrapper admin username and an in-memory scrypt password hash through
+the supported Basic Auth provider environment. No second identity or at-rest
+authentication/configuration change is introduced. Outer login establishes the
+backend session using its supported password-login API; an existing outer cookie
+can establish a missing backend session without a redirect loop. Repeated
+Set-Cookie headers and secure cookie variants survive the proxy. WebSockets retain
+query/subprotocol tickets and forward only backend session cookies and the browser
+Origin, preserving both the outer cookie gate and upstream origin validation.
+Connection-error logs omit response/header representations.
+
+Real offline startup checks reproduce the root refusal without the opt-in and reach
+gateway `running` with it. Held boot starts neither child and creates no state DB.
+The real dashboard-through-wrapper test verifies good/bad login, protected HTTP,
+old-cookie recovery, repeated cookies, HTTPS Secure cookies, logout, and WebSocket
+query/subprotocol handshakes with replay rejection. Config and `.env` stay unchanged.
+These use synthetic credentials, no network access and zero model turns.
 
 ## Database operations and rollback
 
