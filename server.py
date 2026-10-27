@@ -65,6 +65,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 HERMES_HOME = os.environ.get("HERMES_HOME", str(Path.home() / ".hermes"))
 ENV_FILE = Path(HERMES_HOME) / ".env"
+STARTUP_HOLD = Path(HERMES_HOME) / ".startup-hold"
 
 # The Hermes release this image pins. The Dockerfile promotes its `ARG
 # HERMES_REF` to an ENV so we can read it here; a Railway service variable of
@@ -1079,6 +1080,12 @@ class Gateway:
     async def start(self, *, reset_budget: bool = True):
         if self.proc and self.proc.returncode is None:
             return
+        if STARTUP_HOLD.exists():
+            self.state = "held"
+            message = "[gateway] Startup held by .startup-hold; remove the sentinel and explicitly start when ready."
+            self.logs.append(message)
+            print(message, flush=True)
+            return
         # A manual Start/Restart (or boot) grants a fresh crash-loop budget; the
         # auto-respawn path passes reset_budget=False so repeated crashes keep
         # accumulating toward the give-up threshold.
@@ -1260,6 +1267,11 @@ class Dashboard:
 
     async def start(self):
         if self.proc and self.proc.returncode is None:
+            return
+        if STARTUP_HOLD.exists():
+            message = "[dashboard] Startup held by .startup-hold; remove the sentinel and explicitly start when ready."
+            self.logs.append(message)
+            print(message, flush=True)
             return
         try:
             self.proc = await asyncio.create_subprocess_exec(

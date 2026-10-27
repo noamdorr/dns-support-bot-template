@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import runpy
 import tempfile
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
     os.environ['HERMES_HOME'] = temporary
@@ -23,6 +25,7 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
     }
     file = Path(temporary) / 'config.yaml'
     file.write_text(yaml.safe_dump(config))
+    (Path(temporary) / '.env').write_text('LLM_MODEL=synthetic-model\n')
     module['write_config_yaml']({'LLM_MODEL': 'synthetic-model'})
     actual = yaml.safe_load(file.read_text())
     for key, value in config.items():
@@ -31,6 +34,66 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
     assert Path('/opt/hermes-agent').resolve() == Path('/opt/hermes')
     assert Path('/opt/hermes/hermes_cli/web_dist/index.html').exists()
     assert Path('/opt/hermes/ui-tui/dist/entry.js').exists()
+
+    async def check_startup_hold():
+        sentinel = Path(temporary) / '.startup-hold'
+        sentinel.touch()
+        before = file.read_bytes()
+        # Use actual entrypoints; reject any spawn before asserting call counts.
+        spawn = AsyncMock(side_effect=AssertionError('A held service must not spawn'))
+        with patch.object(asyncio, 'create_subprocess_exec', spawn):
+            for reset_budget in (True, False):
+                gateway = module['Gateway']()
+                gateway._recent_exits = [123.0]
+                await gateway.start(reset_budget=reset_budget)
+                assert gateway.proc is None and gateway.state == 'held'
+                assert gateway._recent_exits == [123.0]
+                assert '.startup-hold' in gateway.logs[-1]
+            dashboard = module['Dashboard']()
+            await dashboard.start()
+            assert dashboard.proc is None and dashboard._drain_task is None
+            assert '.startup-hold' in dashboard.logs[-1]
+            # New manager objects still see the persistent hold.
+            await module['Dashboard']().start()
+            spawn.assert_not_awaited()
+        assert sentinel.exists() and file.read_bytes() == before
+
+        sentinel.unlink()
+        # No real subprocesses in this test. Verify absence preserves the existing
+        # argv/env, config write and running-process idempotence at both entrypoints.
+        gateway = module['Gateway']()
+        dashboard = module['Dashboard']()
+        gateway_proc = SimpleNamespace(returncode=None, pid=12345)
+        dashboard_proc = SimpleNamespace(returncode=None, pid=12346)
+        spawn = AsyncMock(side_effect=[gateway_proc, dashboard_proc])
+        with patch.object(asyncio, 'create_subprocess_exec', spawn), \
+             patch.object(gateway, '_drain', AsyncMock()), \
+             patch.object(dashboard, '_drain', AsyncMock()):
+            await gateway.start()
+            await dashboard.start()
+            await asyncio.sleep(0)
+            assert gateway.state == 'running' and gateway.proc is gateway_proc
+            assert dashboard.proc is dashboard_proc
+            assert spawn.await_count == 2
+            gateway_call, dashboard_call = spawn.await_args_list
+            assert gateway_call.args == ('hermes', 'gateway', 'run', '--replace')
+            assert dashboard_call.args == ('hermes', 'dashboard', '--host',
+                module['HERMES_DASHBOARD_HOST'], '--port',
+                str(module['HERMES_DASHBOARD_PORT']), '--no-open', '--skip-build')
+            for call in (gateway_call, dashboard_call):
+                assert call.kwargs['env']['HERMES_HOME'] == temporary
+            await gateway.start()
+            await dashboard.start()
+            assert spawn.await_count == 2
+        after_start = yaml.safe_load(file.read_text())
+        for key, value in config.items():
+            assert after_start[key] == value, key
+        assert after_start['data_dir'] == temporary
+
+    asyncio.run(check_startup_hold())
     print(json.dumps({'config_preserved': True, 'wrapper_imports': True,
                       'legacy_code_path_alias': True, 'compiled_frontends': True,
+                      'startup_hold_gateway_and_dashboard': True,
+                      'hold_survives_manager_recreation': True,
+                      'absence_preserves_start_argv_env_and_config': True,
                       'network': 'disabled', 'production_access': False}))
