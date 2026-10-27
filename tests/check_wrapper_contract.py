@@ -82,6 +82,7 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
                 str(module['HERMES_DASHBOARD_PORT']), '--no-open', '--skip-build')
             for call in (gateway_call, dashboard_call):
                 assert call.kwargs['env']['HERMES_HOME'] == temporary
+                assert call.kwargs['env']['HERMES_ALLOW_ROOT_GATEWAY'] == '1'
             await gateway.start()
             await dashboard.start()
             assert spawn.await_count == 2

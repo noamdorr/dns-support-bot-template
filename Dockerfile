@@ -25,6 +25,10 @@ ENV PATH="/opt/hermes/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 ENV PYTHONPATH=/opt/hermes
 ENV HOME=/data
 ENV HERMES_HOME=/data/.hermes
+# The existing wrapper and persistent volume intentionally use root. Its tini
+# entrypoint replaces upstream's privilege drop, so explicitly opt in through
+# the supported gateway guard without changing users or volume ownership.
+ENV HERMES_ALLOW_ROOT_GATEWAY=1
 ENV HERMES_WRITE_SAFE_ROOT=/data
 ENV HERMES_TUI_DIR=/opt/hermes/ui-tui
 ENV HERMES_WEB_DIST=/opt/hermes/hermes_cli/web_dist
