@@ -71,4 +71,11 @@ if [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
   export HERMES_DASHBOARD_PUBLIC_URL
 fi
 
+# Apply an operator-owned, version-checked runtime extension before either
+# managed consumer starts. An explicitly configured installer must succeed;
+# missing files or incompatible runtime versions stop startup.
+if [ -n "${HERMES_RUNTIME_INSTALLER:-}" ]; then
+  python "$HERMES_RUNTIME_INSTALLER" --root /opt/hermes
+fi
+
 exec python /app/server.py
