@@ -15,13 +15,15 @@ from urllib.parse import urlencode
 
 import httpx
 import websockets
+import hermes_yaml as yaml
 
 home=Path('/data/.hermes')
 home.mkdir(parents=True,exist_ok=True)
 assert not (home/'state.db').exists(), 'Requires a fresh disposable container'
-config='model:\n  default: synthetic-model\n  provider: azure\ntelegram:\n  gateway_restart_notification: false\n'
+config='_config_version: 51\ndelegation:\n  max_iterations: 50\ndisplay:\n  background_process_notifications: all\nplatform_toolsets:\n  telegram: [jira, wiki, jira-read]\nmodel:\n  default: synthetic-model\n  provider: azure\ntelegram:\n  gateway_restart_notification: false\n'
 (home/'config.yaml').write_text(config)
-(home/'.env').write_text('LLM_MODEL=synthetic-model\n')
+env_contents='LLM_MODEL=synthetic-model\nAZURE_FOUNDRY_API_KEY=synthetic-offline-key\n'
+(home/'.env').write_text(env_contents)
 username,password='synthetic-existing-admin','synthetic-existing-password'
 env=dict(os.environ,ADMIN_USERNAME=username,ADMIN_PASSWORD=password,PORT='18080',
     HERMES_DASHBOARD_PUBLIC_URL='http://synthetic.example.invalid',
@@ -55,7 +57,11 @@ with tempfile.TemporaryDirectory(prefix='wrapper-auth-log-') as tmp:
                         health=client.get('/health')
                         # Probe the actual backend's public provider metadata only.
                         ready=httpx.get('http://127.0.0.1:9119/api/auth/providers',trust_env=False,timeout=1)
-                        if health.status_code==200 and ready.status_code==200:break
+                        status=home/'gateway_state.json'
+                        state=json.loads(status.read_text()) if status.exists() else {}
+                        if health.status_code==200 and ready.status_code==200 and state.get('gateway_state')=='running':
+                            initial_gateway_pid=state['pid']
+                            break
                     except httpx.HTTPError:pass
                     time.sleep(.2)
                 else:raise AssertionError('Dashboard did not bind: '+logpath.read_text()[-3000:])
@@ -103,8 +109,21 @@ with tempfile.TemporaryDirectory(prefix='wrapper-auth-log-') as tmp:
                 response=client.get('/logout')
                 assert response.status_code==302
                 assert client.get('/api/auth/me').status_code==401
-                assert (home/'config.yaml').read_text()==config
-                assert (home/'.env').read_text()=='LLM_MODEL=synthetic-model\n'
+                saved=yaml.safe_load((home/'config.yaml').read_text())
+                original=yaml.safe_load(config)
+                def assert_retained(expected, actual):
+                    if isinstance(expected,dict):
+                        for key,value in expected.items():assert_retained(value,actual[key])
+                    else:assert actual==expected
+                assert_retained(original,saved)
+                assert 'basic_auth' not in saved.get('dashboard',{})
+                assert (home/'.env').read_text()==env_contents
+                # Catch a child that briefly reported running and then failed
+                # while mounting its own dashboard-backed runtime API.
+                time.sleep(4)
+                state=json.loads((home/'gateway_state.json').read_text())
+                assert state['gateway_state']=='running' and state['pid']==initial_gateway_pid
+                assert logpath.read_text().count('[gateway] model=')==1
                 assert password not in logpath.read_text()
                 assert 'scrypt$' not in logpath.read_text()
         finally:
@@ -117,5 +136,6 @@ print(json.dumps({'outer_bad_login_rejected':True,'same_identity_backend_bridge'
     'protected_http_pass':True,'old_outer_cookie_repaired_without_loop':True,
     'multiple_set_cookie_preserved':True,'ws_outer_gate':True,'ws_query_ticket':True,
     'ws_ticket_replay_rejected':True,'ws_untrusted_origin_rejected':True,'ws_subprotocol_ticket':True,'https_secure_backend_cookies':True,
-    'logout_relocks_outer_gate':True,'config_and_env_unchanged':True,'no_secret_logs':True,
+    'logout_relocks_outer_gate':True,'explicit_config_and_env_unchanged':True,'no_secret_logs':True,
+    'gateway_stays_running_with_public_url_and_dashboard':True,'version51_original_policies_stable':True,
     'public_url_preserved':True,'network':'disabled','model_turns':0,'production_access':False}))

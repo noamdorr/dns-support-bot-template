@@ -85,12 +85,26 @@ with tempfile.TemporaryDirectory(prefix='wrapper-fixture-') as temporary:
             for call in (gateway_call, dashboard_call):
                 assert call.kwargs['env']['HERMES_HOME'] == temporary
                 assert call.kwargs['env']['HERMES_ALLOW_ROOT_GATEWAY'] == '1'
-            from plugins.dashboard_auth.basic import _verify_password
+            from plugins.dashboard_auth.basic import BasicAuthProvider, _verify_password
+            import base64
             dashboard_env = dashboard_call.kwargs['env']
             assert dashboard_env['HERMES_DASHBOARD_BASIC_AUTH_USERNAME'] == 'synthetic-test'
             assert _verify_password('synthetic-offline-test-only', dashboard_env['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH'])
             assert 'HERMES_DASHBOARD_BASIC_AUTH_PASSWORD' not in dashboard_env
             assert dashboard_env['HERMES_DASHBOARD_PUBLIC_URL'] == 'https://synthetic.example.invalid'
+            gateway_env = gateway_call.kwargs['env']
+            assert gateway_env['HERMES_DASHBOARD_BASIC_AUTH_USERNAME'] == 'synthetic-test'
+            assert _verify_password('synthetic-offline-test-only', gateway_env['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH'])
+            assert 'HERMES_DASHBOARD_BASIC_AUTH_PASSWORD' not in gateway_env
+            assert gateway_env['HERMES_DASHBOARD_BASIC_AUTH_SECRET'] == dashboard_env['HERMES_DASHBOARD_BASIC_AUTH_SECRET']
+            secret = base64.b64decode(dashboard_env['HERMES_DASHBOARD_BASIC_AUTH_SECRET'])
+            assert len(secret) == 32 and secret != module['COOKIE_SECRET']
+            providers = [BasicAuthProvider(username=e['HERMES_DASHBOARD_BASIC_AUTH_USERNAME'],
+                password_hash=e['HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH'],
+                secret=base64.b64decode(e['HERMES_DASHBOARD_BASIC_AUTH_SECRET']))
+                for e in (dashboard_env, gateway_env)]
+            session = providers[0].complete_password_login(username='synthetic-test',password='synthetic-offline-test-only')
+            assert providers[1].verify_session(access_token=session.access_token).user_id == 'synthetic-test'
             await gateway.start()
             await dashboard.start()
             assert spawn.await_count == 2

@@ -29,6 +29,7 @@ injected into every proxied HTML response so users can always return to the wiza
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import re
@@ -562,6 +563,22 @@ def build_hermes_env() -> dict[str, str]:
     # <= 0 skips the check and the ledger write entirely. setdefault so a
     # Railway service variable or .env can still re-enable it.
     env.setdefault("HERMES_GATEWAY_MAX_STARTS", "0")
+    return env
+
+
+def build_service_env() -> dict[str, str]:
+    """Both services mount gated dashboard APIs and share the existing admin identity."""
+    from plugins.dashboard_auth.basic import hash_password
+    env = build_hermes_env()
+    env["HERMES_DASHBOARD_BASIC_AUTH_USERNAME"] = ADMIN_USERNAME
+    env["HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH"] = hash_password(ADMIN_PASSWORD)
+    # Upstream accepts a base64 signing key. Domain separation keeps backend
+    # tokens distinct from outer cookies; both children can verify the same
+    # backend session. A wrapper restart rotates both, with no persisted secret.
+    env["HERMES_DASHBOARD_BASIC_AUTH_SECRET"] = base64.b64encode(
+        _hmac.new(COOKIE_SECRET, b"hermes-dashboard-basic-auth-v1", _hashlib.sha256).digest()
+    ).decode("ascii")
+    env.pop("HERMES_DASHBOARD_BASIC_AUTH_PASSWORD", None)
     return env
 
 
@@ -1133,7 +1150,7 @@ class Gateway:
         self.state = "starting"
         self._stopping = False
         try:
-            env = build_hermes_env()
+            env = build_service_env()
             model = env.get("LLM_MODEL", "")
             provider_key = next((env.get(k, "") for k in PROVIDER_KEYS if env.get(k)), "")
             print(f"[gateway] model={model or '⚠ NOT SET'} | provider_key={'set' if provider_key else '⚠ NOT SET'}", flush=True)
@@ -1313,15 +1330,7 @@ class Dashboard:
             print(message, flush=True)
             return
         try:
-            # Supported upstream provider, using the existing wrapper identity.
-            # Hash in memory and pass only to this child; never rewrite config or
-            # persist a second password. An inherited plaintext override must not
-            # supersede this identity (upstream gives it precedence over hashes).
-            from plugins.dashboard_auth.basic import hash_password
-            env = build_hermes_env()
-            env["HERMES_DASHBOARD_BASIC_AUTH_USERNAME"] = ADMIN_USERNAME
-            env["HERMES_DASHBOARD_BASIC_AUTH_PASSWORD_HASH"] = hash_password(ADMIN_PASSWORD)
-            env.pop("HERMES_DASHBOARD_BASIC_AUTH_PASSWORD", None)
+            env = build_service_env()
             self.proc = await asyncio.create_subprocess_exec(
                 "hermes", "dashboard",
                 "--host", HERMES_DASHBOARD_HOST,

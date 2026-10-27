@@ -34,10 +34,14 @@ gateway and dashboard launch entrypoints, before child-process side effects. The
 image explicitly sets upstream's supported `HERMES_ALLOW_ROOT_GATEWAY=1` because
 the existing wrapper and volume already use root; no user or ownership is changed.
 
-The upstream public-URL dashboard gate remains enabled. The dashboard child receives
+The upstream public-URL dashboard gate remains enabled. Both service children receive
 the existing wrapper admin username and an in-memory scrypt password hash through
 the supported Basic Auth provider environment. No second identity or at-rest
-authentication/configuration change is introduced. Outer login establishes the
+authentication/configuration change is introduced. The gateway also mounts a
+dashboard-backed runtime API, so it needs the provider too. Both children share a
+domain-separated signing key derived in memory from the wrapper cookie secret;
+backend sessions verify across the two APIs, and wrapper restart rotates the key.
+Outer login establishes the
 backend session using its supported password-login API; an existing outer cookie
 can establish a missing backend session without a redirect loop. Repeated
 Set-Cookie headers and secure cookie variants survive the proxy. WebSockets retain
@@ -49,7 +53,10 @@ Real offline startup checks reproduce the root refusal without the opt-in and re
 gateway `running` with it. Held boot starts neither child and creates no state DB.
 The real dashboard-through-wrapper test verifies good/bad login, protected HTTP,
 old-cookie recovery, repeated cookies, HTTPS Secure cookies, logout, and WebSocket
-query/subprotocol handshakes with replay rejection. Config and `.env` stay unchanged.
+query/subprotocol handshakes with replay rejection. Explicit configuration values
+and `.env` stay unchanged while the wrapper fills its normal missing defaults.
+The complete wrapper test requires gateway and dashboard to remain running together
+with the public URL configured, including preserved version-51 explicit policies.
 These use synthetic credentials, no network access and zero model turns.
 
 ## Database operations and rollback
