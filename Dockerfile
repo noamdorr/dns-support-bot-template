@@ -13,10 +13,11 @@ ENV HERMES_REF=${HERMES_REF}
 RUN /opt/hermes/.venv/bin/python -c 'import json, os, pathlib, sys; stamp = json.loads(pathlib.Path("/opt/hermes/install-stamp.json").read_text()); assert stamp["commit"] == os.environ["HERMES_COMMIT"], stamp.get("commit"); assert sys.version_info[:2] == (3, 14), sys.version'
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends tini && \
+    apt-get install -y --no-install-recommends tini tesseract-ocr tesseract-ocr-eng tesseract-ocr-rus poppler-utils && \
     rm -rf /var/lib/apt/lists/* && \
     ln -s /opt/hermes /opt/hermes-agent && \
-    mkdir -p /data/.hermes
+    mkdir -p /data/.hermes && \
+    /opt/hermes/.venv/bin/python -c 'import shutil, subprocess; langs = subprocess.check_output(["tesseract", "--list-langs"], text=True).splitlines(); assert {"eng", "rus"} <= set(langs); assert shutil.which("pdftoppm")'
 
 # Bypass the upstream root-to-hermes CLI shim, which changes HOME to /opt/data.
 # This wrapper already owns its subprocesses and keeps its existing /data home.
